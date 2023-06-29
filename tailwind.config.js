@@ -12,12 +12,23 @@ module.exports = {
         "slate-800": "rgb(30 41 59)",
         "slate-700": "rgb(51 65 85)",
         "slate-600": "rgb(71 85 105)",
+        "slate-200": "rgb(226 232 240)",
         "slate-100": "rgb(241 245 249)",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+      },
+      colors: {
+        black: "#000",
+        white: "#fff",
+        gray: {
+          100: "#f7fafc",
+          500: "#989684",
+          900: "#1a202c",
+        },
+        gold: "#ffc51a",
       },
     },
     screens: {
@@ -27,16 +38,7 @@ module.exports = {
       xl: "1280px",
       "2xl": "1536px",
     },
-    colors: {
-      black: "#000",
-      white: "#fff",
-      gray: {
-        100: "#f7fafc",
-        500: "#989684",
-        900: "#1a202c",
-      },
-      gold: "#ffc51a",
-    },
+
   },
   plugins: [],
 };
