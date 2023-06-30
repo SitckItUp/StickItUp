@@ -30,9 +30,9 @@ export default function MakeStickers() {
 
   function selectCustomSize(e: React.ChangeEvent<HTMLInputElement>) {
     e.target.name === 'custom-width' ? 
-    setCustomSize({ ...customSize, width: e.target.value})
+    setCustomSize((prevState)=>{return{...prevState, width: e.target.value}})
     :
-    setCustomSize({...customSize, height: e.target.value })
+    setCustomSize((prevState)=>{return{...prevState, height: e.target.value}})
   }
 
 
