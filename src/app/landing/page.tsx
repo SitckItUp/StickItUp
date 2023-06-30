@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import MakeStickers from "../components/HomePage/MakeStickers";
 
 export default function Landing() {
   return (
@@ -16,11 +17,15 @@ export default function Landing() {
           height="500"
         />
       </div>
-      <div className="text-center rounded-lg p-1 shadow-md border-0 border-black hover:bg-gold hover:cursor-pointer w-max">
+      {/* <div className="text-center rounded-lg p-1 shadow-md border-0 border-black hover:bg-gold hover:cursor-pointer w-max">
         <Link href="/editor" aria-label="Editor">
           Go to editor/upload image
         </Link>
+      </div> */}
+        <div className="w-3/4">
+        <MakeStickers />
       </div>
     </div>
+
   );
 }

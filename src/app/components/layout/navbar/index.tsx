@@ -11,7 +11,7 @@ export default function Navbar() {
       </div>
       <div className="flex justify-self-center">
         <Link href="/landing" aria-label="Stickers">
-          Stickers
+          Make Stickers
         </Link>
       </div>
     </nav>

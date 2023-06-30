@@ -25,10 +25,14 @@ module.exports = {
         white: "#fff",
         gray: {
           100: "#f7fafc",
+          300: "#adb5bd",
           500: "#989684",
           900: "#1a202c",
         },
-        gold: "#ffc51a",
+        gold: {
+          100: "#ffc51a",
+          300:"#e6ac00",
+        },
       },
     },
     screens: {

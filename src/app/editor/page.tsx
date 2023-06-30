@@ -1,22 +1,60 @@
 'use client'
 
-import { useState } from "react";
+import React, { useState } from "react";
 import Summary from "../components/Editor/Summary";
 import Background from "../components/Editor/Background";
 import Material from "../components/Editor/Material";
-import Outline from "../components/Editor/Outline";
+import Cutline from "../components/Editor/Cutline";
 import UploadFile from "../components/Editor/UploadFile";
 
+// define interface w/ index signature and value as React.ComponentType<any>
+interface ToolComponents {
+  [key: string]: React.ComponentType<any>;
+}
+
+const toolComponents: ToolComponents = {
+  Upload: UploadFile,
+  Cutline: Cutline,
+  Background: Background,
+  Material: Material,
+};
+
+
+// default settings to map to state
+
+// General/Summary Component Settings
+
+
+// Material Settings
+const materialSettings = {
+  holo: {
+    text: "Holographic Stickers",
+    thumbnail: "holo.png",
+  },
+  mirror: {
+    text: "Mirror Stickers",
+    thumbnail: "mirror.png",
+  },
+  glitter: {
+    text: "Glitter Stickers",
+    thumbnail: "glitter.png",
+  },
+  glow: {
+    text: "Glow in the Dark Stickers",
+    thumbnail: "glow.png",
+  },
+}
+
+// Background Settings
+
+// Editor Component
 export default function Editor() {
   
-  const [currentTool, setCurrentTool] = useState<React.ReactNode | null>(<UploadFile/>);
+  const [currentTool, setCurrentTool] = useState<React.ReactNode | null>(
+  <UploadFile/>
+  );
 
-  const icons: React.ReactNode[] = [
-    "Upload",
-    "Outline",
-    "Background",
-    "Material",
-  ].map((el: string) => {
+  const icons: React.ReactNode[] = Object.keys(toolComponents).map((el: string) => {
     return (
       <div
         key={el}
@@ -29,35 +67,23 @@ export default function Editor() {
   });
 
   const handleToolChange = (tool: string) => {
-    switch (tool) {
-      case "Upload":
-        setCurrentTool(<UploadFile />);
-        break;
-      case "Outline":
-        setCurrentTool(<Outline />);
-        break;
-      case "Background":
-        setCurrentTool(<Background />);
-        break;
-      case "Material":
-        setCurrentTool(<Material />);
-        break;
-      default:
-        setCurrentTool(null);
-        break;
-    }
+    const Component = toolComponents[tool];
+    setCurrentTool(<Component />);
   };
 
   return (
-    <div className="flex w-full h-full rounded">
-      <div className="shadow-inner flex items-center justify-center w-9/12 bg-slate-200">
+    <div className="flex w-full h-full">
+      <div className="editor-pane shadow-inner flex items-center justify-center w-9/12 bg-slate-200">
         <div>Editor</div>
       </div>
-      <div className="tool-container flex flex-col justify-between w-2/12 bg-slate-100">
-        {currentTool}
-        < Summary />
+      <div className="tool-column w-2/12 bg-slate-100">
+        <h2 className="text-2xl font-bold mb-5"> Custom Stickers </h2>
+        <div className="tool-container flex flex-col justify-between h-full">
+          {currentTool}
+          < Summary />
+        </div>
       </div>
-      <div className="flex flex-col items-center w-1/12 bg-slate-800">{icons}</div>
+      <div className="tool-icons flex flex-col items-center w-1/12 bg-slate-800">{icons}</div>
     </div>
   );
 }
