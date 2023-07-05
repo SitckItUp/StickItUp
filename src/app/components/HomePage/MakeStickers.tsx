@@ -1,11 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
-const cutlineOptions = ['Countour cut', 'Square', 'Circle', 'Round corners']
-const sizeOptions = ['2" x 1"', '2" x 2"', '3" x 2"', '3" x 3"', '4" x 4"']
+
+const cutlineOptions : string[] = ['Countour cut', 'Square', 'Circle', 'Round corners']
+const sizeOptions: string[] = ['2" x 1"', '2" x 2"', '3" x 2"', '3" x 3"', '4" x 4"']
+const quantityOptions: number[] = [1,3,5,10,20]
 
 export default function MakeStickers() {
+  const router = useRouter();
 
   const [cutLine, setCutLine] = useState('');
   const [size, setSize] = useState('')
@@ -35,10 +40,28 @@ export default function MakeStickers() {
     setCustomSize((prevState)=>{return{...prevState, height: e.target.value}})
   }
 
+  function selectQuantity(quantity?: number | null, e?: React.ChangeEvent<HTMLInputElement>) {
+    if (e?.target.name === 'custom-equantity') {
+      setQuantity(parseInt(e.target.value))
+    }
+    else setQuantity(quantity)
+  }
+
 
   // upload file to s3 bucket
   function imgFileHandler(image: File) {
     
+  }
+
+  function uploadHandler(e: any) { // setting e type to React.ChangeEvent<HTMLInputElement> throws null error for .files
+    if (e.target.files[0]) {
+      // e.preventDefault();
+      // const imgURL = URL.createObjectURL(e.target.files[0]);
+      console.log(e.target.files[0]);
+      setImgFile(e.target.files[0]);
+    }
+
+    router.push('/editor');
   }
 
   return (
@@ -65,32 +88,28 @@ export default function MakeStickers() {
               return <li className={size === option ? "bg-gray-300 py-2" : "hover:bg-gray-300 py-2"} onClick={() => selectSize(option)}>{option}</li>
             })} 
             <label>Custom Size</label>
-              <li className='flex'>
+              <li className='flex w-3/4'>
                 <input name="custom-width" className='text-center w-1/2' type="number" onChange={(e) => selectCustomSize(e)} />
                 <span className='mx-2'>X</span>
               <input className='text-center w-1/2' name="custom-height" type="number" onChange={(e) => selectCustomSize(e)}/>
               {/* <p>{`${customSize.width} x ${customSize.height}`}</p> */}
-              <p>{size}</p>
-              </li>
+            </li>
+            <p>{size}</p>
           </ul>
         </div>
         <div className="container">
           <h1 className="mb-4 text-xl font-bold">Quantity</h1>
           <ul>
-            <li className='hover:bg-gray-300 py-2'>
-              Item 1
-            </li>
-            <li className='hover:bg-gray-300 py-2'>
-              Item 2
-            </li>
-            <li className='hover:bg-gray-300 py-2'>
-              Item 3
-            </li>
-            <li className='hover:bg-gray-300 py-2'>
-              Item 4
-            </li>
-            <li className='hover:bg-gray-300 py-2'>
-              Item 5
+            {quantityOptions.map(quant => {
+              return (
+                <li className={quantity > 0 && quantity === quant ? "bg-gray-300 py-2" : 'hover:bg-gray-300 py-2' } onClick={(e) => selectQuantity(quant)}>
+                  {`${quant} pc`}
+                </li>
+              )
+            })}
+            <label>Custom quantity:</label>
+            <li>
+              <input name="custom-quantity" className="text-center w-1/2" type="number" min="1" value={quantity} onChange={(e) => selectQuantity(null,e)} />
             </li>
           </ul>
         </div>
@@ -115,16 +134,24 @@ export default function MakeStickers() {
           </ul>
           <div id="upload">
             <input id="files" className="invisible" type="file" accept="image/jpeg, image/png, image/svg+xml" 
-              onChange={(e) => {
-                if (e.target.files[0]) {
-                  console.log(e.target.files[0]);
-                  setImgFile(e.target.files[0]);
-                }
-              }}/>
+              onChange={uploadHandler}
+            />
             <label htmlFor="files" className="w-full bg-gold-100 hover:bg-gold-300 hover:cursor-pointer py-2 px-4 rounded-3xl font-medium">
               UPLOAD FILE
             </label>
             <small className="flex justify-column">JPEG, PNG, SVG</small>
+            <div>
+              {imgFile && (
+                <div>
+                  <Image
+                    src={URL.createObjectURL(imgFile)}
+                    width="300"
+                    height="300"
+                    alt="File preview"
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

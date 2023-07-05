@@ -1,7 +1,15 @@
 import { useState } from "react"
 
+interface CutlineSettings {
+  [key: string]: {
+    text: string;
+    thumbnail: string;
+  }
+}
+
+
 // Cutline Settings
-const cutlineSettings = {
+const cutlineSettings: CutlineSettings = {
   small: {
     text: "Small",
     thumbnail: "small.png",

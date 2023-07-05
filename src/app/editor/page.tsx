@@ -6,6 +6,8 @@ import Background from "../components/Editor/Background";
 import Material from "../components/Editor/Material";
 import Cutline from "../components/Editor/Cutline";
 import UploadFile from "../components/Editor/UploadFile";
+import Image from 'next/image'
+
 
 // define interface w/ index signature and value as React.ComponentType<any>
 interface ToolComponents {
@@ -74,7 +76,15 @@ export default function Editor() {
   return (
     <div className="flex w-full h-full">
       <div className="editor-pane shadow-inner flex items-center justify-center w-9/12 bg-slate-200">
-        <div>Editor</div>
+        <div>Editor
+
+          <Image
+            src='../../public/pinterest.png'
+            width={500}
+            height={500}
+            alt="file upload"
+          />
+        </div>
       </div>
       <div className="tool-column w-2/12 bg-slate-100">
         <h2 className="text-2xl font-bold mb-5"> Custom Stickers </h2>
@@ -83,7 +93,7 @@ export default function Editor() {
           < Summary />
         </div>
       </div>
-      <div className="tool-icons flex flex-col items-center w-1/12 bg-slate-800">{icons}</div>
+      <div className="tool-icons flex flex-col items-center w-1/12 bg-slate-800 text-slate-100">{icons}</div>
     </div>
   );
 }
