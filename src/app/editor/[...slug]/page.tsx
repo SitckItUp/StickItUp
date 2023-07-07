@@ -1,41 +1,110 @@
-"use client";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+'use client'
 
-export default function Editor({ params }: { params: { slug: string[] } }) {
-  // searchParams is for url segments that look like '?a=10&b=20'
-  // can grab a value via searchParams.get('a');
-  const searchParams = useSearchParams();
-  const router = useRouter();
+import React, { useState, useEffect } from "react";
+import { getCookie } from 'cookies-next';
+import { useRouter } from "next/navigation";
+import Summary from "../../components/Editor/Summary";
+import Background from "../../components/Editor/Background";
+import Material from "../../components/Editor/Material";
+import Cutline from "../../components/Editor/Cutline";
+import UploadFile from "../../components/Editor/UploadFile";
+import Image from 'next/image'
+
+
+// define interface w/ index signature and value as React.ComponentType<any>
+interface ToolComponents {
+  [key: string]: React.ComponentType<any>;
+}
+
+const toolComponents: ToolComponents = {
+  Upload: UploadFile,
+  Cutline: Cutline,
+  Background: Background,
+  Material: Material,
+};
+
+
+// default settings to map to state
+
+// General/Summary Component Settings
+
+
+// Material Settings
+const materialSettings = {
+  holo: {
+    text: "Holographic Stickers",
+    thumbnail: "holo.png",
+  },
+  mirror: {
+    text: "Mirror Stickers",
+    thumbnail: "mirror.png",
+  },
+  glitter: {
+    text: "Glitter Stickers",
+    thumbnail: "glitter.png",
+  },
+  glow: {
+    text: "Glow in the Dark Stickers",
+    thumbnail: "glow.png",
+  },
+}
+
+// Background Settings
+
+// Editor Component
+export default function Editor() {
   
-  //params.slug contains all url segments after our endpoint as str elements
-  //for the url endpoint /editor/1/2/3 params.slug will be an array of [1,2,3]
-  const [slug, setSlug] = useState<number[]>(params.slug.map(el=>Number(el)));
-  //checks to see if url is as expected
-  if(slug.length !== 3 || slug.some(el=>isNaN(el))){
-    throw new Error("Incorrect path");
-    return;
-  }
-  function onChange (s:number,ind:number){
-    setSlug((prev)=>{
-      const newArr = prev.slice();
-      newArr.splice(ind,1,s)
-      return newArr;
-    })
-  }
+  const router = useRouter();
 
-  useEffect(()=>{
-    router.push(`/editor/${slug[0]}/${slug[1]}/${slug[2]}`);
-  },[slug])
+  const [currentTool, setCurrentTool] = useState<React.ReactNode | null>(
+  <UploadFile/>
+  );
+
+  const cookie = getCookie('session');
+  console.log('cookie is: ', cookie);
+  if (cookie) {
+    const { latestURL, img } = JSON.parse(cookie);
+    router.push(`/editor${latestURL}/${img}`);
+  }
+  
+  const icons: React.ReactNode[] = Object.keys(toolComponents).map((el: string) => {
+    return (
+      <div
+        key={el}
+        className="flex items-center justify-center w-full h-20 hover:bg-slate-600 hover:cursor-pointer"
+        onClick={() => handleToolChange(el)}
+      >
+        <span className="text-center">{el}</span>
+      </div>
+    );
+  });
+
+  const handleToolChange = (tool: string) => {
+    const Component = toolComponents[tool];
+    setCurrentTool(<Component />);
+  };
 
   return (
-    <div>
-      <h1>Height is : {slug[0]}</h1>
-      <input type="range" min="0" max="100" value={slug[0]} onChange={(e)=>onChange(Number(e.target.value),0)}/>
-      <h1>Width is : {slug[1]} </h1>
-      <input type="range" min="0" max="100" value={slug[1]} onChange={(e)=>onChange(Number(e.target.value),1)}/>
-      <h1>Quantity is : {slug[2]}</h1>
-      <input type="range" min="0" max="100" value={slug[2]} onChange={(e)=>onChange(Number(e.target.value),2)}/>
+    <div className="flex w-full h-full">
+      <div className="editor-pane shadow-inner flex items-center justify-center w-9/12 bg-slate-200">
+        <div>
+          {/* Editor */}
+          <Image
+            src="https://d6ce0no7ktiq.cloudfront.net/images/attachment/2023/03/13/ceec02f4961a5e0b68fed03b4f9c72f42e638811.png"
+            width={500}
+            height={500}
+            alt="file upload"
+          />
+        </div>
+      </div>
+      <div className="tool-column w-2/12 bg-slate-100">
+        <h2 className="text-2xl font-bold mb-5"> Custom Stickers </h2>
+        <div className="tool-container flex flex-col justify-between h-full">
+          {currentTool}
+          < Summary />
+        </div>
+      </div>
+      <div className="tool-icons flex flex-col items-center w-1/12 bg-slate-800 text-slate-100">{icons}</div>
     </div>
   );
 }

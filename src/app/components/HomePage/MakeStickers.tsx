@@ -53,13 +53,29 @@ export default function MakeStickers() {
     
   }
 
-  function uploadHandler(e: any) { // setting e type to React.ChangeEvent<HTMLInputElement> throws null error for .files
+  async function uploadHandler(e: any) { // setting e type to React.ChangeEvent<HTMLInputElement> throws null error for .files
     if (e.target.files[0]) {
       // e.preventDefault();
       // const imgURL = URL.createObjectURL(e.target.files[0]);
       console.log(e.target.files[0]);
       setImgFile(e.target.files[0]);
+      const data = await fetch('/api/session', {
+        method: 'POST',
+        body: JSON.stringify({
+          img: e.target.files[0].name,
+        }),
+      })
+      const res = await data.json(); 
+      console.log('response = ', res);
     }
+
+    /*
+    Cam - add first anon session check here 
+      - ping next.js API to check if anon session exists
+      - (iron-session) to create session cookie
+      - redirect to editor page w/ url params set to reference S3 bucket that holds the image
+      - sample redirect URL declaration: /editor?imgURL=${imgURL} 
+    */
 
     router.push('/editor');
   }

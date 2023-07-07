@@ -76,10 +76,10 @@ export default function Editor() {
   return (
     <div className="flex w-full h-full">
       <div className="editor-pane shadow-inner flex items-center justify-center w-9/12 bg-slate-200">
-        <div>Editor
-
+        <div>
+          {/* Editor */}
           <Image
-            src='../../public/pinterest.png'
+            src="https://d6ce0no7ktiq.cloudfront.net/images/attachment/2023/03/13/ceec02f4961a5e0b68fed03b4f9c72f42e638811.png"
             width={500}
             height={500}
             alt="file upload"
