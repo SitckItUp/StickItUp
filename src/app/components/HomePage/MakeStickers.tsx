@@ -10,11 +10,11 @@ const cutlineOptions : string[] = ['Countour cut', 'Square', 'Circle', 'Round co
 const sizeOptions: string[] = ['2" x 1"', '2" x 2"', '3" x 2"', '3" x 3"', '4" x 4"']
 const quantityOptions: number[] = [1,3,5,10,20]
 
-const s3 = new S3({
-  accessKeyId: '',
-  secretAccessKey: '',
-  region: '',
-});
+// const s3 = new S3({
+//   accessKeyId: '',
+//   secretAccessKey: '',
+//   region: '',
+// });
 
 export default function MakeStickers() {
   const router = useRouter();
@@ -60,18 +60,37 @@ export default function MakeStickers() {
   // upload file to s3 bucket
   async function s3Handler(image: File | null) {
     if (!imgFile) return;
-    const params = {
-      Bucket: 'stickitupdemo',
-      Key: image?.name,
-      Body: image,
-      ContentType: image?.type
-    };
-    console.log('params: ', params);
+    // const params = {
+    //   Bucket: 'stickitupdemo',
+    //   Key: image?.name,
+    //   Body: image,
+    //   ContentType: image?.type
+    // };
+    // console.log('params: ', params);
 
     try {
-      const upload = s3.upload(params);
-      await upload.promise();
-      console.log(`File uploaded successfully: ${image?.name}`);
+      // const upload = s3.upload(params);
+      // await upload.promise();
+      // console.log(`File uploaded successfully: ${image?.name}`);
+      console.log('name and type ', image?.name, image?.type);
+      const data = await fetch('/api/uploadFile', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: image?.name,
+          type: image?.type
+        })
+      })
+      const response = await data.json();
+      console.log('data url is ', response.signedURL);
+      await fetch(response.signedURL, {
+        method: 'PUT',
+        headers: {
+          "Content-type": image?.type,
+          "Access-Control-Allow-Origin": "*"
+        },
+        body: image,
+      })
+
     } catch (err) {
       console.error(err);
     }
@@ -191,13 +210,6 @@ export default function MakeStickers() {
                   />
                 </div>
               )}
-              <Image
-                    // src={URL.createObjectURL(imgFile)}
-                    src='https://stickitupdemo.s3.us-west-1.amazonaws.com/average+dom+user.png'
-                    width="300"
-                    height="300"
-                    alt="File preview"
-              />
             </div>
           </div>
         </div>
