@@ -3,11 +3,19 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import S3 from 'aws-sdk/clients/s3';
+import { Url } from 'next/dist/shared/lib/router/router';
 
 
 const cutlineOptions : string[] = ['Countour cut', 'Square', 'Circle', 'Round corners']
 const sizeOptions: string[] = ['2" x 1"', '2" x 2"', '3" x 2"', '3" x 3"', '4" x 4"']
 const quantityOptions: number[] = [1,3,5,10,20]
+
+// const s3 = new S3({
+//   accessKeyId: '',
+//   secretAccessKey: '',
+//   region: '',
+// });
 
 export default function MakeStickers() {
   const router = useRouter();
@@ -18,12 +26,15 @@ export default function MakeStickers() {
   const [quantity, setQuantity] = useState(0)
   const [material, setMaterial] = useState(null)
   const [imgFile, setImgFile] = useState(null);
+  const [uploadedImgURL, setUploadedImgURL] = useState(null);
 
   useEffect(() => {
     if (customSize.width !== '' && customSize.height !== '') {
       setSize(`${customSize.width}" x ${customSize.height}"`)
     }
   }, [customSize])
+
+  useEffect(() => {s3Handler(imgFile)}, [imgFile]);
 
   function selectCutOption(cut: string) {
     setCutLine(cut)
@@ -49,15 +60,37 @@ export default function MakeStickers() {
 
 
   // upload file to s3 bucket
-  function imgFileHandler(image: File) {
-    
+  async function s3Handler(image: File | null) {
+    if (!imgFile) return;
+    const data = await fetch('/api/uploadFile', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: image?.name,
+        type: image?.type
+      })
+    })
+    const response = await data.json();
+    // console.log('response is ', response);
+    await fetch(response.signedURL, {
+      method: 'PUT',
+      headers: {
+        "Content-type": image?.type,
+        "Access-Control-Allow-Origin": "*"
+      },
+      body: image,
+    })
+    const url: Url = `https://${response.bucket}.s3.${response.region}.amazonaws.com/${image?.name}`;
+    console.log('url ', url);
+    setUploadedImgURL(url);
+    console.log(`File uploaded successfully: ${image?.name}`);
+
   }
 
   async function uploadHandler(e: any) { // setting e type to React.ChangeEvent<HTMLInputElement> throws null error for .files
     if (e.target.files[0]) {
       // e.preventDefault();
       // const imgURL = URL.createObjectURL(e.target.files[0]);
-      console.log(e.target.files[0]);
+      console.log('uploaded file: ', e.target.files[0]);
       setImgFile(e.target.files[0]);
       const data = await fetch('/api/session', {
         method: 'POST',
@@ -77,7 +110,7 @@ export default function MakeStickers() {
       - sample redirect URL declaration: /editor?imgURL=${imgURL} 
     */
 
-    router.push('/editor');
+    // router.push('/editor');
   }
 
   return (
@@ -157,10 +190,10 @@ export default function MakeStickers() {
             </label>
             <small className="flex justify-column">JPEG, PNG, SVG</small>
             <div>
-              {imgFile && (
+              {uploadedImgURL && (
                 <div>
                   <Image
-                    src={URL.createObjectURL(imgFile)}
+                    src={uploadedImgURL}
                     width="300"
                     height="300"
                     alt="File preview"
