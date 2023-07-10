@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import S3 from 'aws-sdk/clients/s3';
+import { Url } from 'next/dist/shared/lib/router/router';
 
 
 const cutlineOptions : string[] = ['Countour cut', 'Square', 'Circle', 'Round corners']
@@ -25,6 +26,7 @@ export default function MakeStickers() {
   const [quantity, setQuantity] = useState(0)
   const [material, setMaterial] = useState(null)
   const [imgFile, setImgFile] = useState(null);
+  const [uploadedImgURL, setUploadedImgURL] = useState(null);
 
   useEffect(() => {
     if (customSize.width !== '' && customSize.height !== '') {
@@ -60,40 +62,28 @@ export default function MakeStickers() {
   // upload file to s3 bucket
   async function s3Handler(image: File | null) {
     if (!imgFile) return;
-    // const params = {
-    //   Bucket: 'stickitupdemo',
-    //   Key: image?.name,
-    //   Body: image,
-    //   ContentType: image?.type
-    // };
-    // console.log('params: ', params);
-
-    try {
-      // const upload = s3.upload(params);
-      // await upload.promise();
-      // console.log(`File uploaded successfully: ${image?.name}`);
-      console.log('name and type ', image?.name, image?.type);
-      const data = await fetch('/api/uploadFile', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: image?.name,
-          type: image?.type
-        })
+    const data = await fetch('/api/uploadFile', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: image?.name,
+        type: image?.type
       })
-      const response = await data.json();
-      console.log('data url is ', response.signedURL);
-      await fetch(response.signedURL, {
-        method: 'PUT',
-        headers: {
-          "Content-type": image?.type,
-          "Access-Control-Allow-Origin": "*"
-        },
-        body: image,
-      })
+    })
+    const response = await data.json();
+    // console.log('response is ', response);
+    await fetch(response.signedURL, {
+      method: 'PUT',
+      headers: {
+        "Content-type": image?.type,
+        "Access-Control-Allow-Origin": "*"
+      },
+      body: image,
+    })
+    const url: Url = `https://${response.bucket}.s3.${response.region}.amazonaws.com/${image?.name}`;
+    console.log('url ', url);
+    setUploadedImgURL(url);
+    console.log(`File uploaded successfully: ${image?.name}`);
 
-    } catch (err) {
-      console.error(err);
-    }
   }
 
   async function uploadHandler(e: any) { // setting e type to React.ChangeEvent<HTMLInputElement> throws null error for .files
@@ -200,10 +190,10 @@ export default function MakeStickers() {
             </label>
             <small className="flex justify-column">JPEG, PNG, SVG</small>
             <div>
-              {imgFile && (
+              {uploadedImgURL && (
                 <div>
                   <Image
-                    src={URL.createObjectURL(imgFile)}
+                    src={uploadedImgURL}
                     width="300"
                     height="300"
                     alt="File preview"

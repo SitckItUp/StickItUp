@@ -16,6 +16,9 @@ export async function POST (req: Request) {
     let { name, type } = res;
     console.log('name and type', name, type);
 
+    const bucket = process.env.S3_BUCKET_NAME;
+    const region = process.env.S3_REGION;
+
     const fileParams = {
       Bucket: process.env.S3_BUCKET_NAME,
       Key: name,
@@ -27,7 +30,7 @@ export async function POST (req: Request) {
     const signedURL = await s3.getSignedUrlPromise("putObject", fileParams);
     console.log('signed URL ', signedURL);
 
-    return NextResponse.json({ signedURL }, { status: 200 });
+    return NextResponse.json({ signedURL, bucket, region }, { status: 200 });
   } catch (err) {
     console.log(err);
     return NextResponse.json({ message: err }, { status: 400})
