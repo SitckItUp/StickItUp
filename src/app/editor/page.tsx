@@ -85,12 +85,61 @@ export default function Editor(props) {
       }
 
       cv.imshow("output_canvas", dst);
-
+      const newImg = new Image();
+      newImg.src = outputCanvasRef.current.toDataURL("image/png");
       src.delete();
       dst.delete();
       contours.delete();
       hierarchy.delete();
+      traceAgain(newImg);
     };
+  };
+
+  const traceAgain = (img) => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    context.drawImage(img, 0, 0);
+    let src = cv.imread("output_canvas");
+    let color = new cv.Scalar(0, 0, 0, 255);
+    let dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC4); // Use CV_8UC4 for 4-channel (RGBA) output
+    cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+    cv.threshold(src, src, 1, 200, cv.THRESH_BINARY);
+    let contours = new cv.MatVector();
+    let hierarchy = new cv.Mat();
+    // You can try more different parameters
+    cv.findContours(
+      src,
+      contours,
+      hierarchy,
+      cv.RETR_EXTERNAL,
+      cv.CHAIN_APPROX_SIMPLE
+    );
+    // draw contours with transparent background
+    // for (let i = 0; i < contours.size(); ++i) {
+    //   // Use alpha 0 for transparent color
+    //   cv.drawContours(dst, contours, i, color, 1, cv.LINE_8, hierarchy, 100);
+    // }
+
+    //Changing parameter to floodfill here
+    //Has to be set to black because if it is set to white, potrace does not detect edges
+    for (let i = 0; i < contours.size(); ++i) {
+      cv.drawContours(
+        dst,
+        contours,
+        i,
+        color,
+        cv.FILLED,
+        cv.LINE_8,
+        hierarchy,
+        0
+      );
+    }
+
+    cv.imshow("output_canvas", dst);
+    src.delete();
+    dst.delete();
+    contours.delete();
+    hierarchy.delete();
   };
 
   const [currentTool, setCurrentTool] = useState<React.ReactNode | null>(
