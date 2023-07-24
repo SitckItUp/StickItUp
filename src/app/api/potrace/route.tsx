@@ -17,7 +17,8 @@ export async function GET(request: Request) {
   }
 
   potrace.trace(
-    "https://i.imgur.com/0QmN09K.png",
+    // "https://i.imgur.com/0QmN09K.png",
+    "https://i.imgur.com/RUeUuoD.png",
     options,
     function (err, svg) {
       if (err) throw err;

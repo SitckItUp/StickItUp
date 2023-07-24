@@ -53,17 +53,23 @@ export default function Editor(props) {
   const outputCanvasRef = useRef(null);
   useEffect(() => {
     const image = new Image();
-    image.src = "https://i.imgur.com/kAYeTy0.png";
+    //image.src = "https://i.imgur.com/kAYeTy0.png";
+    image.src = "https://i.imgur.com/SRrHqHt.png";
     image.setAttribute("crossOrigin", "");
 
-    traceImage(image);
+    const resultImage = traceImage(image);
+    console.log(resultImage);
   }, []);
 
   const traceImage = (image) => {
-    image.onload = () => {
+    const traced = (image.onload = () => {
       const canvas = canvasRef.current;
       const context = canvas.getContext("2d");
-      context.drawImage(image, 0, 0);
+      context.drawImage(
+        image,
+        canvas.width / 2 - image.width / 2,
+        canvas.height / 2 - image.height / 2
+      );
       let src = cv.imread("my_canvas");
       let dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC4); // Use CV_8UC4 for 4-channel (RGBA) output
       cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
@@ -91,14 +97,21 @@ export default function Editor(props) {
       dst.delete();
       contours.delete();
       hierarchy.delete();
-      traceAgain(newImg);
-    };
+
+      return traceAgain(newImg);
+    });
+
+    return traced();
   };
 
   const traceAgain = (img) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
-    context.drawImage(img, 0, 0);
+    context.drawImage(
+      img,
+      canvas.width / 2 - img.width / 2,
+      canvas.height / 2 - img.height / 2
+    );
     let src = cv.imread("output_canvas");
     let color = new cv.Scalar(0, 0, 0, 255);
     let dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC4); // Use CV_8UC4 for 4-channel (RGBA) output
@@ -136,10 +149,22 @@ export default function Editor(props) {
     }
 
     cv.imshow("output_canvas", dst);
+
+    //Draw original image over outline
+    // const outputCanvas = outputCanvasRef.current;
+    // const outputContext = outputCanvas.getContext("2d");
+    // outputContext.drawImage(
+    //   originalImg,
+    //   outputCanvas.width / 2 - originalImg.width / 2,
+    //   outputCanvas.height / 2 - originalImg.height / 2
+    // );
+    const newImg = new Image();
+    newImg.src = outputCanvasRef.current.toDataURL("image/png");
     src.delete();
     dst.delete();
     contours.delete();
     hierarchy.delete();
+    return newImg;
   };
 
   const [currentTool, setCurrentTool] = useState<React.ReactNode | null>(
@@ -187,8 +212,8 @@ export default function Editor(props) {
             id="output_canvas"
             ref={outputCanvasRef}
             {...props}
-            width={1000}
-            height={1000}
+            width={700}
+            height={700}
             // style={{ backgroundColor: "rgba(0, 0, 0, 0)" }}
           />
         </div>
