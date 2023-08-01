@@ -9,12 +9,21 @@ const options = {
   optTolerance: 10,
 };
 
-export async function GET(request: Request) {
+export async function POST(request: Request) {
   //console.log(request)
   if (!request) {
     console.error("Request object is undefined or null");
     return;
   }
+
+  const body = await request.json();
+  const { image } = body;
+  //console.log("body", body);
+  //console.log(image);
+
+  const imageBuffer = Buffer.from(image, "base64");
+
+  fs.writeFileSync("image.png", imageBuffer);
 
   potrace.trace(
     // "https://i.imgur.com/0QmN09K.png",
@@ -23,7 +32,7 @@ export async function GET(request: Request) {
     function (err, svg) {
       if (err) throw err;
       console.log("start tracing");
-      console.log(svg);
+      //console.log(svg);
       fs.writeFileSync("./new_output4.svg", svg);
     }
   );

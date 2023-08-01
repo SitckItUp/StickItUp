@@ -82,7 +82,7 @@ export default function Editor(props) {
         contours,
         hierarchy,
         cv.RETR_EXTERNAL,
-        cv.CHAIN_APPROX_SIMPLE
+        cv.CHAIN_APPROX_NONE
       );
       // draw contours with transparent background
       for (let i = 0; i < contours.size(); ++i) {
@@ -92,7 +92,9 @@ export default function Editor(props) {
 
       cv.imshow("output_canvas", dst);
       const newImg = new Image();
-      newImg.src = outputCanvasRef.current.toDataURL("image/png");
+      const base64Img = outputCanvasRef.current.toDataURL("image/png");
+      //console.log(base64Img);
+      newImg.src = base64Img;
       src.delete();
       dst.delete();
       contours.delete();
@@ -125,8 +127,14 @@ export default function Editor(props) {
       contours,
       hierarchy,
       cv.RETR_EXTERNAL,
-      cv.CHAIN_APPROX_SIMPLE
+      cv.CHAIN_APPROX_NONE
     );
+
+    console.log("contours.size() is ", contours.size());
+    for (let i = 0; i < contours.size(); ++i) {
+      // console.log(contours[i][0]);
+      console.log('contours.get(0) is ', contours.get(0))
+    }
     // draw contours with transparent background
     // for (let i = 0; i < contours.size(); ++i) {
     //   // Use alpha 0 for transparent color
@@ -158,14 +166,23 @@ export default function Editor(props) {
     //   outputCanvas.width / 2 - originalImg.width / 2,
     //   outputCanvas.height / 2 - originalImg.height / 2
     // );
-    const newImg = new Image();
-    newImg.src = outputCanvasRef.current.toDataURL("image/png");
-    src.delete();
-    dst.delete();
-    contours.delete();
-    hierarchy.delete();
-    return newImg;
+    //const newImg = new Image();
+    const base64Img = outputCanvasRef.current.toDataURL("image/png");
+    //console.log(base64Img);
+    // src.delete();
+    // dst.delete();
+    // contours.delete();
+    // hierarchy.delete();
   };
+
+  function sendToPotrace(base64Img) {
+    fetch("http://localhost:3000/api/potrace", {
+      method: "POST",
+      body: JSON.stringify({ image: base64Img }),
+    })
+      .then((res) => res.json())
+      .then((data) => console.log(data));
+  }
 
   const [currentTool, setCurrentTool] = useState<React.ReactNode | null>(
     <UploadFile />
