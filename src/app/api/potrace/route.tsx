@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const body = await request.json();
   const { image } = body;
   //console.log("body", body);
-  //console.log(image);
+  console.log(image);
 
   const imageBuffer = Buffer.from(image, "base64");
 
