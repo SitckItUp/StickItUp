@@ -16,4 +16,17 @@ module.exports = {
       },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: "/editor",
+        headers: [
+          {
+            key: "Content-Type",
+            value: "text/html",
+          },
+        ],
+      },
+    ];
+  },
 };
