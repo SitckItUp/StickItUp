@@ -1,6 +1,7 @@
 import { NextRequest as Request, NextResponse } from "next/server";
 const potrace = require("potrace");
 const fs = require("fs");
+const path = require("path");
 
 const options = {
   threshold: 30,
@@ -16,18 +17,29 @@ export async function POST(request: Request) {
     return;
   }
 
+  //Grab image as base64 data from client
   const body = await request.json();
+
+  //Destructure the image object from body
   const { image } = body;
-  //console.log("body", body);
-  console.log(image);
 
-  const imageBuffer = Buffer.from(image, "base64");
+  //Remove leading string that we dont need
+  const base64Data = image.replace(/^data:image\/png;base64,/, "");
 
+  //Convert into data array
+  const imageBuffer = Buffer.from(base64Data, "base64");
+
+  //Write the image data array back into a PNG file
   fs.writeFileSync("image.png", imageBuffer);
 
+  //Grab image path from root of project directory
+  const savedImage = path.join(__dirname, "../../../../../image.png");
+
+  //Trace the saved image and output into new_output.svg
   potrace.trace(
     // "https://i.imgur.com/0QmN09K.png",
-    "https://i.imgur.com/RUeUuoD.png",
+    //"https://i.imgur.com/RUeUuoD.png",
+    savedImage,
     options,
     function (err, svg) {
       if (err) throw err;

@@ -53,8 +53,9 @@ export default function Editor(props) {
   const outputCanvasRef = useRef(null);
   useEffect(() => {
     const image = new Image();
-    //image.src = "https://i.imgur.com/kAYeTy0.png";
-    image.src = "https://i.imgur.com/SRrHqHt.png";
+    image.src = "https://i.imgur.com/kAYeTy0.png";
+    //image.src = "https://i.imgur.com/SRrHqHt.png";
+
     image.setAttribute("crossOrigin", "");
 
     const resultImage = traceImage(image);
@@ -129,13 +130,13 @@ export default function Editor(props) {
       cv.RETR_EXTERNAL,
       cv.CHAIN_APPROX_NONE
     );
-    
+
     //create SVG from contours
-    const contoursArr = [];
-    for (let i = 0; i < contours.get(0).data32S.length; ++i) {
-      console.log()
-      console.log('contours.get(0).data32S[i] is ', contours.get(0).data32S[i])
-    }
+    // const contoursArr = [];
+    // for (let i = 0; i < contours.get(0).data32S.length; ++i) {
+    //   console.log()
+    //   console.log('contours.get(0).data32S[i] is ', contours.get(0).data32S[i])
+    // }
 
     // draw contours with transparent background
     // for (let i = 0; i < contours.size(); ++i) {
@@ -170,19 +171,16 @@ export default function Editor(props) {
     // );
     //const newImg = new Image();
 
-
     const base64Img = outputCanvasRef.current.toDataURL("image/png");
     //console.log(base64Img);
     // src.delete();
     // dst.delete();
     // contours.delete();
     // hierarchy.delete();
-    sendToPotrace(base64Img)
+    sendToPotrace(base64Img);
   };
 
-  const createSVG = (contours) => {
-    
-  }
+  const createSVG = (contours) => {};
 
   function sendToPotrace(base64Img) {
     fetch("http://localhost:3000/api/potrace", {
