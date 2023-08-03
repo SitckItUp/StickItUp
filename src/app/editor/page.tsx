@@ -51,16 +51,34 @@ const materialSettings = {
 export default function Editor(props) {
   const canvasRef = useRef(null);
   const outputCanvasRef = useRef(null);
+  const [tracedSVG, setTracedSVG] = useState(null);
+  const svgRef = useRef(null);
+  const [tracedSVGWidth, setTracedSVGWidth] = useState(null);
+  const [bgColor, setBgColor] = useState("#fff");
   useEffect(() => {
     const image = new Image();
-    image.src = "https://i.imgur.com/kAYeTy0.png";
-    //image.src = "https://i.imgur.com/SRrHqHt.png";
+    //image.src = "https://i.imgur.com/kAYeTy0.png";
+    image.src = "https://i.imgur.com/SRrHqHt.png";
 
     image.setAttribute("crossOrigin", "");
 
     const resultImage = traceImage(image);
     console.log(resultImage);
   }, []);
+
+  useEffect(() => {
+    if (svgRef.current) {
+      // Access the container element using the ref
+      const containerElement = svgRef.current;
+      containerElement.querySelector("path").setAttribute("fill", bgColor);
+    }
+  }, [bgColor]);
+
+  // useEffect(() => {
+  //   console.log(tracedSVG);
+  // }, [tracedSVG]);
+
+  const updateTracedSVGWidth = (el: React.El) => {};
 
   const traceImage = (image) => {
     const traced = (image.onload = () => {
@@ -188,7 +206,7 @@ export default function Editor(props) {
       body: JSON.stringify({ image: base64Img }),
     })
       .then((res) => res.json())
-      .then((data) => console.log(data));
+      .then((data) => setTracedSVG(data));
   }
 
   const [currentTool, setCurrentTool] = useState<React.ReactNode | null>(
@@ -211,13 +229,13 @@ export default function Editor(props) {
 
   const handleToolChange = (tool: string) => {
     const Component = toolComponents[tool];
-    setCurrentTool(<Component />);
+    setCurrentTool(<Component bgColor={bgColor} setBgColor={setBgColor} />);
   };
 
   return (
     <div className="flex w-full h-full">
       <div className="flex items-center justify-center w-9/12 shadow-inner editor-pane bg-slate-200">
-        <div>
+        <div className="relative w-full h-full">
           {/* Editor */}
           {/* <Image
             src="https://d6ce0no7ktiq.cloudfront.net/images/attachment/2023/03/13/ceec02f4961a5e0b68fed03b4f9c72f42e638811.png"
@@ -225,21 +243,34 @@ export default function Editor(props) {
             height={500}
             alt="file upload"
           /> */}
-          <canvas
-            id="my_canvas"
-            ref={canvasRef}
-            {...props}
-            width={700}
-            height={700}
-          />
-          <canvas
-            id="output_canvas"
-            ref={outputCanvasRef}
-            {...props}
-            width={700}
-            height={700}
-            // style={{ backgroundColor: "rgba(0, 0, 0, 0)" }}
-          />
+          <div className={!tracedSVG ? "invisible" : "visible"}>
+            <canvas
+              className="absolute top-0 left-0 z-10"
+              id="my_canvas"
+              ref={canvasRef}
+              {...props}
+              width={700}
+              height={700}
+            />
+
+            {!tracedSVG && (
+              <canvas
+                className="absolute top-0 left-0"
+                id="output_canvas"
+                ref={outputCanvasRef}
+                {...props}
+                width={700}
+                height={700}
+              />
+            )}
+            {tracedSVG && (
+              <div
+                className="absolute top-0 left-0"
+                ref={svgRef}
+                dangerouslySetInnerHTML={{ __html: tracedSVG }}
+              />
+            )}
+          </div>
         </div>
       </div>
       <div className="w-2/12 tool-column bg-slate-100">
