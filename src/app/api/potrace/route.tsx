@@ -34,7 +34,7 @@ export async function POST(request: Request) {
   //and send response back to client
   try {
     // Wrap potrace.trace in a Promise for async/await usage
-    const svg = await new Promise((resolve, reject) => {
+    let svg = await new Promise((resolve, reject) => {
       potrace.trace(savedImage, options, function (err, svg) {
         if (err) {
           reject(err);
@@ -43,6 +43,8 @@ export async function POST(request: Request) {
         }
       });
     });
+
+    svg = svg.replace("black", "#fff");
 
     // Write the SVG to a file (optional)
     fs.writeFileSync("./new_output4.svg", svg);

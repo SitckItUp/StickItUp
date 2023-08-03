@@ -57,8 +57,8 @@ export default function Editor(props) {
   const [bgColor, setBgColor] = useState("#fff");
   useEffect(() => {
     const image = new Image();
-    //image.src = "https://i.imgur.com/kAYeTy0.png";
-    image.src = "https://i.imgur.com/SRrHqHt.png";
+    image.src = "https://i.imgur.com/kAYeTy0.png";
+    //image.src = "https://i.imgur.com/SRrHqHt.png";
 
     image.setAttribute("crossOrigin", "");
 
@@ -66,17 +66,38 @@ export default function Editor(props) {
     console.log(resultImage);
   }, []);
 
+  // useEffect(() => {
+  //   if (svgRef.current) {
+  //     // Access the container element using the ref
+  //     const containerElement = svgRef.current;
+  //     containerElement.querySelector("path").setAttribute("fill", bgColor);
+  //     containerElement.querySelector("path").setAttribute("border", "#000");
+  //   }
+  // }, [bgColor]);
+
+  // useEffect(() => {
+  //   if (svgRef.current) {
+  //     // Access the container element using the ref
+  //     const containerElement = svgRef.current;
+  //     containerElement
+  //       .querySelector("svg")
+  //       .classList.add("max-w-full", "h-auto");
+  //   }
+  // }, [tracedSVG]);
+
   useEffect(() => {
     if (svgRef.current) {
       // Access the container element using the ref
       const containerElement = svgRef.current;
+      // Update fill and border attributes based on bgColor
       containerElement.querySelector("path").setAttribute("fill", bgColor);
+      containerElement.querySelector("path").setAttribute("border", "#000");
+      // Apply max-w-full and h-auto classes based on tracedSVG
+      containerElement
+        .querySelector("svg")
+        .classList.add("max-w-full", "h-auto");
     }
-  }, [bgColor]);
-
-  // useEffect(() => {
-  //   console.log(tracedSVG);
-  // }, [tracedSVG]);
+  }, [bgColor, tracedSVG]);
 
   const updateTracedSVGWidth = (el: React.El) => {};
 
@@ -245,7 +266,7 @@ export default function Editor(props) {
           /> */}
           <div className={!tracedSVG ? "invisible" : "visible"}>
             <canvas
-              className="absolute top-0 left-0 z-10"
+              className="absolute top-0 left-0 z-10 max-w-full"
               id="my_canvas"
               ref={canvasRef}
               {...props}
@@ -255,7 +276,7 @@ export default function Editor(props) {
 
             {!tracedSVG && (
               <canvas
-                className="absolute top-0 left-0"
+                className="absolute top-0 left-0 max-w-full"
                 id="output_canvas"
                 ref={outputCanvasRef}
                 {...props}
@@ -265,7 +286,7 @@ export default function Editor(props) {
             )}
             {tracedSVG && (
               <div
-                className="absolute top-0 left-0"
+                className="absolute top-0 left-0 max-w-full drop-shadow-xl"
                 ref={svgRef}
                 dangerouslySetInnerHTML={{ __html: tracedSVG }}
               />
@@ -273,14 +294,14 @@ export default function Editor(props) {
           </div>
         </div>
       </div>
-      <div className="w-2/12 tool-column bg-slate-100">
+      <div className="w-72 min-w-72 tool-column bg-slate-100">
         <h2 className="mb-5 text-2xl font-bold"> Custom Stickers </h2>
-        <div className="flex flex-col justify-between h-full tool-container">
+        <div className="flex flex-col justify-between h-full w-72 tool-container">
           {currentTool}
           <Summary />
         </div>
       </div>
-      <div className="flex flex-col items-center w-1/12 tool-icons bg-slate-800 text-slate-100">
+      <div className="flex flex-col items-center w-24 tool-icons bg-slate-800 text-slate-100">
         {icons}
       </div>
     </div>

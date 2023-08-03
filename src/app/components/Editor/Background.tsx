@@ -7,7 +7,7 @@ interface BackgroundProps {
 }
 
 export default function Background({ bgColor, setBgColor }: BackgroundProps) {
-  const [background, setBackground] = useState(bgColor);
+  const [background, setBackground] = useState("#fff");
 
   //console.log(bgColor);
   const handleBackgroundChange = (color: any) => {
