@@ -1,22 +1,26 @@
 import { SketchPicker } from "react-color";
 import { useState } from "react";
 
-export default function Background () {
-  const [background, setBackground] = useState('#fff');
-  
-  const handleBackgroundChange = (color:any) => {
-    setBackground(color.rgb);
-  }
+interface BackgroundProps {
+  bgColor: string;
+  setBgColor: React.Dispatch<React.SetStateAction<string>>;
+}
+
+export default function Background({ bgColor, setBgColor }: BackgroundProps) {
+  const [background, setBackground] = useState(bgColor);
+
+  //console.log(bgColor);
+  const handleBackgroundChange = (color: any) => {
+    setBackground(color.hex);
+    setBgColor(color.hex);
+  };
 
   return (
-    <div className="background-tool-container flex justify-center bg-slate-100 h-1/6 w-full">
+    <div className="flex justify-center w-full background-tool-container bg-slate-100 h-1/6">
       <div>
         {/* <h1 className="text-2xl font-bold">Background</h1> */}
-        <SketchPicker
-          color={background}
-          onChange={handleBackgroundChange}
-        />
+        <SketchPicker color={background} onChange={handleBackgroundChange} />
       </div>
     </div>
-  )
+  );
 }
