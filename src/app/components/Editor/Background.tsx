@@ -1,3 +1,4 @@
+'use client';
 import { SketchPicker } from "react-color";
 import { useState } from "react";
 

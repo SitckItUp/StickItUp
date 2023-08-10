@@ -254,8 +254,8 @@ export default function Editor(props) {
   };
 
   return (
-    <div className="flex w-full h-full">
-      <div className="flex items-center justify-center w-9/12 shadow-inner editor-pane bg-slate-200">
+    <div className="flex flex-col lg:flex-row w-full h-full">
+      <div className="flex items-center justify-center h-full lg:w-9/12 shadow-inner editor-pane bg-slate-200">
         <div className="relative w-full h-full">
           {/* Editor */}
           {/* <Image
@@ -294,14 +294,14 @@ export default function Editor(props) {
           </div>
         </div>
       </div>
-      <div className="w-72 min-w-72 tool-column bg-slate-100">
+      <div className="lg:w-72 lg:min-w-72 lg:relative lg:bottom-0 lg:h-full h-60 absolute bottom-20 w-full tool-column bg-slate-100">
         <h2 className="mb-5 text-2xl font-bold"> Custom Stickers </h2>
-        <div className="flex flex-col justify-between h-full w-72 tool-container">
+        <div className="flex lg:flex-col justify-between lg:h-full lg:w-72 tool-container">
           {currentTool}
           <Summary />
         </div>
       </div>
-      <div className="flex flex-col items-center w-24 tool-icons bg-slate-800 text-slate-100">
+      <div className="flex lg:flex-col lg:items-center lg:w-24 lg:relative absolute bottom-0 w-full tool-icons bg-slate-800 text-slate-100">
         {icons}
       </div>
     </div>
