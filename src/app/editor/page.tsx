@@ -55,6 +55,11 @@ export default function Editor(props) {
   const svgRef = useRef(null);
   const [tracedSVGWidth, setTracedSVGWidth] = useState(null);
   const [bgColor, setBgColor] = useState("#fff");
+
+  const [currentTool, setCurrentTool] = useState<React.ReactNode | null>(
+    <UploadFile />
+  );
+
   useEffect(() => {
     const image = new Image();
     image.src = "https://i.imgur.com/kAYeTy0.png";
@@ -97,7 +102,7 @@ export default function Editor(props) {
         .querySelector("svg")
         .classList.add("max-w-full", "h-auto");
     }
-  }, [bgColor, tracedSVG]);
+  }, [bgColor, tracedSVG, currentTool]);
 
   const updateTracedSVGWidth = (el: React.El) => {};
 
@@ -230,10 +235,6 @@ export default function Editor(props) {
       .then((data) => setTracedSVG(data));
   }
 
-  const [currentTool, setCurrentTool] = useState<React.ReactNode | null>(
-    <UploadFile />
-  );
-
   const icons: React.ReactNode[] = Object.keys(toolComponents).map(
     (el: string) => {
       return (
@@ -266,7 +267,7 @@ export default function Editor(props) {
           /> */}
           <div className={!tracedSVG ? "invisible" : "visible"}>
             <canvas
-              className="absolute top-0 left-0 z-10 max-w-full"
+              className="topdiv absolute top-0 left-0 z-10 max-w-full"
               id="my_canvas"
               ref={canvasRef}
               {...props}
@@ -276,7 +277,7 @@ export default function Editor(props) {
 
             {!tracedSVG && (
               <canvas
-                className="absolute top-0 left-0 max-w-full"
+                className="output-canvas absolute top-0 left-0 max-w-full"
                 id="output_canvas"
                 ref={outputCanvasRef}
                 {...props}
@@ -286,7 +287,7 @@ export default function Editor(props) {
             )}
             {tracedSVG && (
               <div
-                className="absolute top-0 left-0 max-w-full drop-shadow-xl"
+                className="backg-svg absolute top-0 left-0 max-w-full drop-shadow-xl"
                 ref={svgRef}
                 dangerouslySetInnerHTML={{ __html: tracedSVG }}
               />
