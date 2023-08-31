@@ -10,7 +10,6 @@ import UploadFile from "../../components/Editor/UploadFile";
 import cv from "opencv.js";
 import { split } from "postcss/lib/list";
 
-
 // define interface w/ index signature and value as React.ComponentType<any>
 interface ToolComponents {
   [key: string]: React.ComponentType<any>;
@@ -49,7 +48,10 @@ const materialSettings = {
 
 // Background Settings
 
-export default function Editor({ params }: { params: { slug: string[] } }, props) {
+export default function Editor(
+  { params }: { params: { slug: string[] } },
+  props
+) {
   const canvasRef = useRef(null);
   const outputCanvasRef = useRef(null);
   const [tracedSVG, setTracedSVG] = useState(null);
@@ -61,15 +63,17 @@ export default function Editor({ params }: { params: { slug: string[] } }, props
   const [currentTool, setCurrentTool] = useState<React.ReactNode | null>(
     <UploadFile />
   );
-  
+
   // searchParams is for url segments that look like '?a=10&b=20'
   // can grab a value via searchParams.get('a');
   const searchParams = useSearchParams();
   const router = useRouter();
-  
+
   //params.slug contains all url segments after our endpoint as str elements
   //for the url endpoint /editor/1/2/3 params.slug will be an array of [1,2,3]
-  const [slug, setSlug] = useState<number[]>(params.slug.map(el=>Number(el)));
+  // const [slug, setSlug] = useState<number[]>(
+  //   params.slug.map((el) => Number(el))
+  // );
 
   // //checks to see if url is as expected
   // if(slug.length !== 3 || slug.some(el=>isNaN(el))){
@@ -98,7 +102,6 @@ export default function Editor({ params }: { params: { slug: string[] } }, props
     const resultImage = traceImage(image);
     console.log(resultImage);
   }, []);
-
 
   useEffect(() => {
     if (svgRef.current) {
@@ -139,10 +142,18 @@ export default function Editor({ params }: { params: { slug: string[] } }, props
         cv.RETR_EXTERNAL,
         cv.CHAIN_APPROX_NONE
       );
+
+      let cnt = contours.get(0).data32S[0];
+      console.log(cnt);
+
+      // You can try more different parameters
+      // let Moments = cv.moments(cnt, false);
+      // console.log("moments", Moments);
+
       // draw contours with transparent background
       for (let i = 0; i < contours.size(); ++i) {
         let color = new cv.Scalar(255, 255, 255, 255); // Use alpha 0 for transparent color
-        cv.drawContours(dst, contours, i, color, 35, cv.LINE_8, hierarchy, 100);
+        cv.drawContours(dst, contours, i, color, 80, cv.LINE_8, hierarchy, 100);
       }
 
       cv.imshow("output_canvas", dst);
@@ -334,8 +345,8 @@ export default function Editor({ params }: { params: { slug: string[] } }, props
   };
 
   return (
-    <div className="flex flex-col lg:flex-row w-full h-full">
-      <div className="flex items-center justify-center h-full lg:w-9/12 shadow-inner editor-pane bg-slate-200">
+    <div className="flex flex-col w-full h-full lg:flex-row">
+      <div className="flex items-center justify-center h-full shadow-inner lg:w-9/12 editor-pane bg-slate-200">
         <div className="relative w-full h-full">
           {/* Editor */}
           {/* <Image
@@ -346,7 +357,7 @@ export default function Editor({ params }: { params: { slug: string[] } }, props
           /> */}
           <div className={!tracedSVG ? "invisible" : "visible"}>
             <canvas
-              className="topdiv absolute top-0 left-0 z-10 max-w-full"
+              className="absolute top-0 left-0 z-10 max-w-full topdiv"
               id="my_canvas"
               ref={canvasRef}
               {...props}
@@ -356,7 +367,7 @@ export default function Editor({ params }: { params: { slug: string[] } }, props
 
             {!tracedSVG && (
               <canvas
-                className="output-canvas absolute top-0 left-0 max-w-full"
+                className="absolute top-0 left-0 max-w-full output-canvas"
                 id="output_canvas"
                 ref={outputCanvasRef}
                 {...props}
@@ -366,7 +377,7 @@ export default function Editor({ params }: { params: { slug: string[] } }, props
             )}
             {tracedSVG && (
               <div
-                className="backg-svg absolute top-0 left-0 max-w-full drop-shadow-xl"
+                className="absolute top-0 left-0 max-w-full backg-svg drop-shadow-xl"
                 ref={svgRef}
                 dangerouslySetInnerHTML={{ __html: tracedSVG }}
               />
@@ -374,17 +385,17 @@ export default function Editor({ params }: { params: { slug: string[] } }, props
           </div>
         </div>
       </div>
-      <div className="lg:w-72 lg:min-w-72 lg:relative lg:bottom-0 lg:h-full h-60 absolute bottom-20 w-full tool-column bg-slate-100">
+      <div className="absolute w-full lg:w-72 lg:min-w-72 lg:relative lg:bottom-0 lg:h-full h-60 bottom-20 tool-column bg-slate-100">
         <h2 className="mb-5 text-2xl font-bold"> Custom Stickers </h2>
-        <div className="flex lg:flex-col justify-between lg:h-full lg:w-72 tool-container">
+        <div className="flex justify-between lg:flex-col lg:h-full lg:w-72 tool-container">
           {currentTool}
           <Summary />
         </div>
       </div>
-      <div className="flex lg:flex-col lg:items-center lg:w-24 lg:relative absolute bottom-0 w-full tool-icons bg-slate-800 text-slate-100">
+      <div className="absolute bottom-0 flex w-full lg:flex-col lg:items-center lg:w-24 lg:relative tool-icons bg-slate-800 text-slate-100">
         {icons}
       </div>
-       {/* <div>
+      {/* <div>
         <h1>Height is : {slug[0]}</h1>
         <input type="range" min="0" max="100" value={slug[0]} onChange={(e)=>onChange(Number(e.target.value),0)}/>
         <h1>Width is : {slug[1]} </h1>
@@ -393,8 +404,5 @@ export default function Editor({ params }: { params: { slug: string[] } }, props
         <input type="range" min="0" max="100" value={slug[2]} onChange={(e)=>onChange(Number(e.target.value),2)}/>
       </div> */}
     </div>
-
-
-     
   );
 }

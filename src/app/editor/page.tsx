@@ -9,6 +9,7 @@ import UploadFile from "../components/Editor/UploadFile";
 //import Image from "next/image";
 import cv from "opencv.js";
 import { split } from "postcss/lib/list";
+import { start } from "repl";
 
 // define interface w/ index signature and value as React.ComponentType<any>
 interface ToolComponents {
@@ -65,6 +66,7 @@ export default function Editor(props) {
   useEffect(() => {
     const image = new Image();
     image.src = "https://i.imgur.com/kAYeTy0.png";
+    //a circle
     //image.src = "https://i.imgur.com/SRrHqHt.png";
 
     image.setAttribute("crossOrigin", "");
@@ -131,6 +133,37 @@ export default function Editor(props) {
         cv.RETR_EXTERNAL,
         cv.CHAIN_APPROX_NONE
       );
+
+      // let cnt = contours.get(0);
+      // console.log(cnt);
+      // if (cnt) {
+      //   // You can try more different parameters
+      //   let M = cv.moments(cnt, false);
+      //   console.log("moments", M);
+      //   let cx = M.m10 / M.m00;
+      //   let cy = M.m01 / M.m00;
+
+      //   console.log("x,y:", cx, cy);
+
+      //   let circleCenter = new cv.Point(cx, cy);
+      //   cv.circle(dst, circleCenter, 10, [0, 0, 0, 255], -1);
+      //   const data = new Uint8ClampedArray(dst.data);
+      //   const imageData = new ImageData(data, dst.cols, dst.rows);
+      //   context.putImageData(imageData, 0, 0);
+      //   // for (let i = 0; i < contours.get(0).rows; i++) {
+      //   //   let startPoint = new cv.Point(
+      //   //     contours.get(0).data32S[i * 4],
+      //   //     contours.get(0).data32S[i * 4 + 1]
+      //   //   );
+      //   //   let endPoint = new cv.Point(
+      //   //     contours.get(0).data32S[i * 4 + 2],
+      //   //     contours.get(0).data32S[i * 4 + 3]
+      //   //   );
+
+      //   //   console.log(startPoint, endPoint);
+      //   // }
+      // }
+
       // draw contours with transparent background
       for (let i = 0; i < contours.size(); ++i) {
         let color = new cv.Scalar(255, 255, 255, 255); // Use alpha 0 for transparent color
@@ -326,8 +359,8 @@ export default function Editor(props) {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row w-full h-full">
-      <div className="flex items-center justify-center h-full lg:w-9/12 shadow-inner editor-pane bg-slate-200">
+    <div className="flex flex-col w-full h-full lg:flex-row">
+      <div className="flex items-center justify-center h-full shadow-inner lg:w-9/12 editor-pane bg-slate-200">
         <div className="relative w-full h-full">
           {/* Editor */}
           {/* <Image
@@ -338,7 +371,7 @@ export default function Editor(props) {
           /> */}
           <div className={!tracedSVG ? "invisible" : "visible"}>
             <canvas
-              className="topdiv absolute top-0 left-0 z-10 max-w-full"
+              className="absolute top-0 left-0 z-10 max-w-full topdiv"
               id="my_canvas"
               ref={canvasRef}
               {...props}
@@ -348,7 +381,7 @@ export default function Editor(props) {
 
             {!tracedSVG && (
               <canvas
-                className="output-canvas absolute top-0 left-0 max-w-full"
+                className="absolute top-0 left-0 max-w-full output-canvas"
                 id="output_canvas"
                 ref={outputCanvasRef}
                 {...props}
@@ -356,24 +389,24 @@ export default function Editor(props) {
                 height={700}
               />
             )}
-            {tracedSVG && (
+            {/* {tracedSVG && (
               <div
-                className="backg-svg absolute top-0 left-0 max-w-full drop-shadow-xl"
+                className="absolute top-0 left-0 max-w-full backg-svg drop-shadow-xl"
                 ref={svgRef}
                 dangerouslySetInnerHTML={{ __html: tracedSVG }}
               />
-            )}
+            )} */}
           </div>
         </div>
       </div>
-      <div className="lg:w-72 lg:min-w-72 lg:relative lg:bottom-0 lg:h-full h-60 absolute bottom-20 w-full tool-column bg-slate-100">
+      <div className="absolute w-full lg:w-72 lg:min-w-72 lg:relative lg:bottom-0 lg:h-full h-60 bottom-20 tool-column bg-slate-100">
         <h2 className="mb-5 text-2xl font-bold"> Custom Stickers </h2>
-        <div className="flex lg:flex-col justify-between lg:h-full lg:w-72 tool-container">
+        <div className="flex justify-between lg:flex-col lg:h-full lg:w-72 tool-container">
           {currentTool}
           <Summary />
         </div>
       </div>
-      <div className="flex lg:flex-col lg:items-center lg:w-24 lg:relative absolute bottom-0 w-full tool-icons bg-slate-800 text-slate-100">
+      <div className="absolute bottom-0 flex w-full lg:flex-col lg:items-center lg:w-24 lg:relative tool-icons bg-slate-800 text-slate-100">
         {icons}
       </div>
     </div>
