@@ -7,34 +7,45 @@ import S3 from 'aws-sdk/clients/s3';
 import { Url } from 'next/dist/shared/lib/router/router';
 
 
-const cutlineOptions : string[] = ['Countour cut', 'Square', 'Circle', 'Round corners']
-const sizeOptions: string[] = ['2" x 1"', '2" x 2"', '3" x 2"', '3" x 3"', '4" x 4"']
-const quantityOptions: number[] = [1,3,5,10,20]
+const cutlineOptions : string[] = ['Contour cut', 'Square', 'Circle', 'Round corners'];
+const sizeOptions: string[] = ['2" x 1"', '2" x 2"', '3" x 2"', '3" x 3"', '4" x 4"'];
+const quantityOptions: number[] = [1, 3, 5, 10, 20];
+// Placeholder for material options
+const materialOptions: string[] = ['Vinyl', 'Item 2', 'Item 3', 'Item 4', 'Item 5'];
 
-// const s3 = new S3({
-//   accessKeyId: '',
-//   secretAccessKey: '',
-//   region: '',
-// });
 
 export default function MakeStickers() {
   const router = useRouter();
 
-  const [cutLine, setCutLine] = useState('');
-  const [size, setSize] = useState('')
-  const [customSize, setCustomSize] = useState({width: '', height: ''})
-  const [quantity, setQuantity] = useState(0)
-  const [material, setMaterial] = useState(null)
+  const [cutLine, setCutLine] = useState('Contour cut');
+  const [size, setSize] = useState('2" x 1"');
+  const [customSize, setCustomSize] = useState({width: '', height: ''});
+  const [quantity, setQuantity] = useState(1);
+  const [material, setMaterial] = useState('Vinyl');
   const [imgFile, setImgFile] = useState(null);
   const [uploadedImgURL, setUploadedImgURL] = useState(null);
 
   useEffect(() => {
     if (customSize.width !== '' && customSize.height !== '') {
       setSize(`${customSize.width}" x ${customSize.height}"`)
+      // console.log('custom size', customSize);
+      // console.log('size', size);
     }
-  }, [customSize])
+  }, [customSize]);
 
-  useEffect(() => {s3Handler(imgFile)}, [imgFile]);
+  useEffect(() => {
+    if (imgFile) {
+      s3Handler(imgFile)
+    };
+  }, [imgFile]);
+
+  useEffect(() => {
+    if (uploadedImgURL) {
+      console.log('current states => cutline: ', cutLine, 'size: ', size, 'quantity: ', quantity, 'material: ', material, 'imgURL: ', uploadedImgURL);
+      router.push(`/editor/${cutLine}/${size}/${quantity}/${material.toLowerCase()}`);
+    }
+
+  }, [uploadedImgURL]);
 
   function selectCutOption(cut: string) {
     setCutLine(cut)
@@ -42,6 +53,7 @@ export default function MakeStickers() {
 
   function selectSize(size: string) {
     setSize(size);
+    // console.log('size', size);
   }
 
   function selectCustomSize(e: React.ChangeEvent<HTMLInputElement>) {
@@ -56,6 +68,11 @@ export default function MakeStickers() {
       setQuantity(parseInt(e.target.value))
     }
     else setQuantity(quantity)
+  }
+
+  function selectMaterial(material: string) {
+    setMaterial(material);
+    console.log('material selected', material);
   }
 
 
@@ -164,22 +181,10 @@ export default function MakeStickers() {
         </div>
         <div className="container">
           <h1 className="mb-4 text-xl font-bold">Material</h1>
-          <ul>
-            <li className='hover:bg-gray-300 py-2'>
-              Item 1
-            </li>
-            <li className='hover:bg-gray-300 py-2'>
-              Item 2
-            </li>
-            <li className='hover:bg-gray-300 py-2'>
-              Item 3
-            </li>
-            <li className='hover:bg-gray-300 py-2'>
-              Item 4
-            </li>
-            <li className='hover:bg-gray-300 py-2'>
-              Item 5
-            </li>
+          <ul className='w-full'>
+            {materialOptions.map(option => {
+              return <li className={material === option ? "bg-gray-300 py-2" : "hover:bg-gray-300 py-2"} onClick={() => selectMaterial(option)}>{option}</li>
+            })}
           </ul>
           <div id="upload">
             <input id="files" className="invisible" type="file" accept="image/jpeg, image/png, image/svg+xml" 

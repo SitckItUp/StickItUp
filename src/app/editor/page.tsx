@@ -8,6 +8,7 @@ import Cutline from "../components/Editor/Cutline";
 import UploadFile from "../components/Editor/UploadFile";
 //import Image from "next/image";
 import cv from "opencv.js";
+import { split } from "postcss/lib/list";
 
 // define interface w/ index signature and value as React.ComponentType<any>
 interface ToolComponents {
@@ -55,6 +56,7 @@ export default function Editor(props) {
   const svgRef = useRef(null);
   const [tracedSVGWidth, setTracedSVGWidth] = useState(null);
   const [bgColor, setBgColor] = useState("#fff");
+  const [svgPath, setSVGPath] = useState<null | string>();
 
   const [currentTool, setCurrentTool] = useState<React.ReactNode | null>(
     <UploadFile />
@@ -233,7 +235,70 @@ export default function Editor(props) {
       body: JSON.stringify({ image: base64Img }),
     })
       .then((res) => res.json())
-      .then((data) => setTracedSVG(data));
+      .then((data) => {
+        console.log(data);
+        const splitPath = data.split('"');
+        //console.log(splitPath[11]);
+        setSVGPath(splitPath[11]);
+        setTracedSVG(data);
+      });
+  }
+
+  function expandCutLine(size: string) {
+    //Set the ratio to expand the SVG by
+    //Currently only sets medium and large cutlines, small should default to original size
+    //but gets overwritten
+    const amountToIncrease = size === "medium" ? 0.15 : 0.3;
+
+    //Check to see if we have a path to perform the expansion
+    if (svgPath) {
+      //Split the path by white space
+      const splitPath = svgPath.split(" ");
+      //console.log(splitPath);
+      //Loop through each point in the path
+      for (let i = 0; i < splitPath.length; i++) {
+        //console.log(point);
+        //Set a flag to check if the current point has a comma at the end of the point,
+        // if so we'll remove it and tack it back on later
+        let hasComma = false;
+        //check if last char is a comma
+        if (splitPath[i][splitPath[i].length - 1] === ",") {
+          hasComma = true;
+          //Set the current point with the comma removed
+          splitPath[i] = splitPath[i].substring(0, splitPath[i].length - 1);
+        }
+
+        //Point is currently a string, cast the string to a number
+        //We want a number because we want to only expand on the numbers
+        //and not the C, L, etc of a SVG path element
+        let convertedPoint = Number(splitPath[i]);
+
+        //Check to see if current point is a number if not ignore
+        if (!isNaN(convertedPoint)) {
+          //Check to see if the point is supposed to have a comma
+          //Increase the current point by a factor and if there was supposed to be a comma,
+          //tack it on, otherwise leave it
+          splitPath[i] = hasComma
+            ? String(
+                (convertedPoint + amountToIncrease * convertedPoint).toFixed(3)
+              ) + ","
+            : String(
+                (convertedPoint + amountToIncrease * convertedPoint).toFixed(3)
+              );
+        }
+      }
+      // console.log(splitPath);
+      //Join the expanded path array back into an actual path
+      const expandedPath = splitPath.join(" ");
+      //Take the entire SVG string and replace the old path with the new path
+      const newSVG = tracedSVG.replace(
+        /<path d="([^"]+)"/,
+        `<path d="${expandedPath}"`
+      );
+
+      //set state to new path
+      setTracedSVG(newSVG);
+    }
   }
 
   const icons: React.ReactNode[] = Object.keys(toolComponents).map(
@@ -252,7 +317,13 @@ export default function Editor(props) {
 
   const handleToolChange = (tool: string) => {
     const Component = toolComponents[tool];
-    setCurrentTool(<Component bgColor={bgColor} setBgColor={setBgColor} />);
+    setCurrentTool(
+      <Component
+        bgColor={bgColor}
+        setBgColor={setBgColor}
+        expandCutLine={expandCutLine}
+      />
+    );
   };
 
   return (
