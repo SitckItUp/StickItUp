@@ -124,6 +124,8 @@ export default function Editor(props) {
       cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
       cv.threshold(src, src, 1, 200, cv.THRESH_BINARY);
       let contours = new cv.MatVector();
+      let expandedContours = new cv.MatVector();
+
       let hierarchy = new cv.Mat();
       // You can try more different parameters
       cv.findContours(
@@ -134,47 +136,120 @@ export default function Editor(props) {
         cv.CHAIN_APPROX_NONE
       );
 
-      // let cnt = contours.get(0);
-      // console.log(cnt);
-      // if (cnt) {
-      //   // You can try more different parameters
-      //   let M = cv.moments(cnt, false);
-      //   console.log("moments", M);
-      //   let cx = M.m10 / M.m00;
-      //   let cy = M.m01 / M.m00;
+      //if (contours) console.log(contours.get(0));
 
-      //   console.log("x,y:", cx, cy);
+      //Draw the minimum surrounding box around the contours
+      for (let i = 0; i < contours.size(); i++) {
+        const contour = contours.get(i);
+        console.log("current contour", contour);
+        const expandedContoursArr = [];
+        const rect = cv.boundingRect(contour);
+        console.log("rect:", rect);
 
-      //   let circleCenter = new cv.Point(cx, cy);
-      //   cv.circle(dst, circleCenter, 10, [0, 0, 0, 255], -1);
-      //   const data = new Uint8ClampedArray(dst.data);
-      //   const imageData = new ImageData(data, dst.cols, dst.rows);
-      //   context.putImageData(imageData, 0, 0);
-      //   // for (let i = 0; i < contours.get(0).rows; i++) {
-      //   //   let startPoint = new cv.Point(
-      //   //     contours.get(0).data32S[i * 4],
-      //   //     contours.get(0).data32S[i * 4 + 1]
-      //   //   );
-      //   //   let endPoint = new cv.Point(
-      //   //     contours.get(0).data32S[i * 4 + 2],
-      //   //     contours.get(0).data32S[i * 4 + 3]
-      //   //   );
+        const center = {
+          x: rect.x / 2,
+          y: rect.y / 2,
+        };
 
-      //   //   console.log(startPoint, endPoint);
-      //   // }
-      // }
+        console.log("offset x:", center.x, "center y:", center.y);
 
-      // draw contours with transparent background
-      for (let i = 0; i < contours.size(); ++i) {
-        let color = new cv.Scalar(255, 255, 255, 255); // Use alpha 0 for transparent color
-        cv.drawContours(dst, contours, i, color, 35, cv.LINE_8, hierarchy, 100);
+        // Draw the bounding rectangle on the canvas
+        context.strokeStyle = "red"; // Set the color of the rectangle
+        context.lineWidth = 2; // Set the line width
+        context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+
+        //Try to expand the contours
+        //Find the center of the contour
+        //Subtract is from each point in the contour
+        //Multiple contour points x,y by a scale factor
+        //add the center again to each point
+
+        //Subtract center from each point
+        for (let j = 0; j < contour.rows; j += 2) {
+          expandedContoursArr.push(Math.floor(contour.data32S[j] - center.x));
+          expandedContoursArr.push(
+            Math.floor(contour.data32S[j + 1] - center.y)
+          );
+        }
+
+        //Multiple each point by a factor
+        for (let j = 0; j < expandedContoursArr.length; j += 2) {
+          expandedContoursArr[j] = Math.floor(expandedContoursArr[j] * 0.9);
+          expandedContoursArr[j + 1] = expandedContoursArr[j + 1] = Math.floor(
+            expandedContoursArr[j + 1] * 0.9
+          );
+        }
+
+        //Add the center point back
+        for (let j = 0; j < expandedContoursArr.length; j += 2) {
+          expandedContoursArr[j] = Math.floor(
+            expandedContoursArr[j] + center.x
+          );
+          expandedContoursArr[j + 1] = Math.floor(
+            expandedContoursArr[j + 1] + center.y
+          );
+        }
+
+        console.log(expandedContoursArr);
+        const mat = cv.matFromArray(
+          expandedContoursArr.length,
+          2,
+          cv.CV_32S,
+          expandedContoursArr
+        );
+
+        expandedContours.push_back(mat);
+
+        //Create a dot to locate the center
+
+        // let circleCenter = new cv.Point(cx, cy);
+        // cv.circle(dst, circleCenter, 5, [0, 0, 0, 255], -1);
+        // const data = new Uint8ClampedArray(dst.data);
+        // const imageData = new ImageData(data, dst.cols, dst.rows);
+        // context.putImageData(imageData, 0, 0);
       }
 
+      // for (let i = 0; i < contours.get(0).rows; i++) {
+      //   let startPoint = new cv.Point(
+      //     contours.get(0).data32S[i * 4],
+      //     contours.get(0).data32S[i * 4 + 1]
+      //   );
+      //   let endPoint = new cv.Point(
+      //     contours.get(0).data32S[i * 4 + 2],
+      //     contours.get(0).data32S[i * 4 + 3]
+      //   );
+
+      //   console.log(startPoint, endPoint);
+      // }
+
+      //draw contours with transparent background
+      for (let i = 0; i < expandedContours.size(); ++i) {
+        let color = new cv.Scalar(255, 255, 255, 255); // Use alpha 0 for transparent color
+        cv.drawContours(
+          dst,
+          expandedContours,
+          i,
+          color,
+          35,
+          cv.LINE_8,
+          hierarchy,
+          100
+        );
+      }
+
+      // log element with id "output_canvas"
+
+      console.log(
+        "output_canvas is:",
+        document.getElementById("output_canvas")
+      );
       cv.imshow("output_canvas", dst);
       const newImg = new Image();
       const base64Img = outputCanvasRef.current.toDataURL("image/png");
+      sendToPotrace(base64Img);
       //console.log(base64Img);
       newImg.src = base64Img;
+
       src.delete();
       dst.delete();
       contours.delete();
@@ -360,7 +435,27 @@ export default function Editor(props) {
 
   return (
     <div className="flex flex-col w-full h-full lg:flex-row">
-      <div className="flex items-center justify-center h-full shadow-inner lg:w-9/12 editor-pane bg-slate-200">
+      <div className="relative flex items-center justify-center h-full shadow-inner lg:w-9/12 editor-pane bg-slate-200">
+        <div
+          className={`absolute flex justify-center items-center z-50 h-full w-full bg-slate-200 ${
+            tracedSVG ? "hidden" : ""
+          }`}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            className="w-12 h-12 text-slate-500 animate-spin"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+            />
+          </svg>
+        </div>
         <div className="relative w-full h-full">
           {/* Editor */}
           {/* <Image
@@ -369,6 +464,7 @@ export default function Editor(props) {
             height={500}
             alt="file upload"
           /> */}
+
           <div className={!tracedSVG ? "invisible" : "visible"}>
             <canvas
               className="absolute top-0 left-0 z-10 max-w-full topdiv"
@@ -379,7 +475,7 @@ export default function Editor(props) {
               height={700}
             />
 
-            {!tracedSVG && (
+            {/* {!tracedSVG && (
               <canvas
                 className="absolute top-0 left-0 max-w-full output-canvas"
                 id="output_canvas"
@@ -388,18 +484,36 @@ export default function Editor(props) {
                 width={700}
                 height={700}
               />
-            )}
-            {/* {tracedSVG && (
+            )} */}
+
+            {/* ****************
+
+          old "output_canvas" above
+          new "output_canvas" below. will always be rendered on DOM, but visibility toggled based on tracedSVG 
+
+          */}
+            <canvas
+              className={`output-canvas absolute top-0 left-0 max-w-full ${
+                tracedSVG ? "hidden" : ""
+              }`}
+              id="output_canvas"
+              ref={outputCanvasRef}
+              {...props}
+              width={700}
+              height={700}
+            />
+
+            {tracedSVG && (
               <div
                 className="absolute top-0 left-0 max-w-full backg-svg drop-shadow-xl"
                 ref={svgRef}
                 dangerouslySetInnerHTML={{ __html: tracedSVG }}
               />
-            )} */}
+            )}
           </div>
         </div>
       </div>
-      <div className="absolute w-full lg:w-72 lg:min-w-72 lg:relative lg:bottom-0 lg:h-full h-60 bottom-20 tool-column bg-slate-100">
+      <div className="absolute flex flex-col w-full lg:w-72 lg:min-w-72 lg:relative lg:bottom-0 lg:h-full h-60 bottom-20 tool-column bg-slate-100">
         <h2 className="mb-5 text-2xl font-bold"> Custom Stickers </h2>
         <div className="flex justify-between lg:flex-col lg:h-full lg:w-72 tool-container">
           {currentTool}
