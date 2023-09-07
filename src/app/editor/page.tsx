@@ -70,9 +70,9 @@ export default function Editor(props) {
     //image.src = "https://i.imgur.com/SRrHqHt.png";
 
     image.setAttribute("crossOrigin", "");
-
-    const resultImage = traceImage(image);
-    console.log(resultImage);
+    traceImage(image);
+    // const resultImage = traceImage(image);
+    // console.log(resultImage);
   }, []);
 
   // useEffect(() => {
@@ -136,27 +136,21 @@ export default function Editor(props) {
         cv.CHAIN_APPROX_NONE
       );
 
-      //if (contours) console.log(contours.get(0));
-
-      //Draw the minimum surrounding box around the contours
+      //Algorithm to expand contours by a factor
       for (let i = 0; i < contours.size(); i++) {
         const contour = contours.get(i);
         console.log("current contour", contour);
         const expandedContoursArr = [];
-        const rect = cv.boundingRect(contour);
-        console.log("rect:", rect);
 
+        //Find the center point of each contour object to calculate offset
+        let M = cv.moments(contour, false);
         const center = {
-          x: rect.x / 2,
-          y: rect.y / 2,
+          x: Math.floor(M.m10 / M.m00),
+          y: Math.floor(M.m01 / M.m00),
         };
 
-        console.log("offset x:", center.x, "center y:", center.y);
-
-        // Draw the bounding rectangle on the canvas
-        context.strokeStyle = "red"; // Set the color of the rectangle
-        context.lineWidth = 2; // Set the line width
-        context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+        console.log("original", contour.data32S);
+        console.log("offset x:", center.x, "y:", center.y);
 
         //Try to expand the contours
         //Find the center of the contour
@@ -165,76 +159,40 @@ export default function Editor(props) {
         //add the center again to each point
 
         //Subtract center from each point
-        for (let j = 0; j < contour.rows; j += 2) {
-          expandedContoursArr.push(Math.floor(contour.data32S[j] - center.x));
-          expandedContoursArr.push(
-            Math.floor(contour.data32S[j + 1] - center.y)
-          );
+        for (let j = 0; j < contour.rows; j++) {
+          expandedContoursArr.push(contour.data32S[j * 2] - center.x);
+          expandedContoursArr.push(contour.data32S[j * 2 + 1] - center.y);
         }
 
+        console.log("expanded arr", expandedContoursArr.length);
+
         //Multiple each point by a factor
-        for (let j = 0; j < expandedContoursArr.length; j += 2) {
-          expandedContoursArr[j] = Math.floor(expandedContoursArr[j] * 0.9);
-          expandedContoursArr[j + 1] = expandedContoursArr[j + 1] = Math.floor(
-            expandedContoursArr[j + 1] * 0.9
-          );
+        for (let j = 0; j < expandedContoursArr.length; j++) {
+          expandedContoursArr[j] = expandedContoursArr[j] * 1.1;
         }
 
         //Add the center point back
         for (let j = 0; j < expandedContoursArr.length; j += 2) {
-          expandedContoursArr[j] = Math.floor(
-            expandedContoursArr[j] + center.x
-          );
-          expandedContoursArr[j + 1] = Math.floor(
-            expandedContoursArr[j + 1] + center.y
-          );
+          expandedContoursArr[j] = expandedContoursArr[j] + center.x;
+          expandedContoursArr[j + 1] = expandedContoursArr[j + 1] + center.y;
         }
 
-        console.log(expandedContoursArr);
+        // console.log(expandedContoursArr);
         const mat = cv.matFromArray(
-          expandedContoursArr.length,
+          expandedContoursArr.length / 2,
           2,
           cv.CV_32S,
           expandedContoursArr
         );
 
         expandedContours.push_back(mat);
-
-        //Create a dot to locate the center
-
-        // let circleCenter = new cv.Point(cx, cy);
-        // cv.circle(dst, circleCenter, 5, [0, 0, 0, 255], -1);
-        // const data = new Uint8ClampedArray(dst.data);
-        // const imageData = new ImageData(data, dst.cols, dst.rows);
-        // context.putImageData(imageData, 0, 0);
+        console.log("expanded mat:", mat);
       }
 
-      // for (let i = 0; i < contours.get(0).rows; i++) {
-      //   let startPoint = new cv.Point(
-      //     contours.get(0).data32S[i * 4],
-      //     contours.get(0).data32S[i * 4 + 1]
-      //   );
-      //   let endPoint = new cv.Point(
-      //     contours.get(0).data32S[i * 4 + 2],
-      //     contours.get(0).data32S[i * 4 + 3]
-      //   );
-
-      //   console.log(startPoint, endPoint);
-      // }
-
-      //draw contours with transparent background
+      //draw expanded contours with transparent background
       for (let i = 0; i < expandedContours.size(); ++i) {
         let color = new cv.Scalar(255, 255, 255, 255); // Use alpha 0 for transparent color
-        cv.drawContours(
-          dst,
-          expandedContours,
-          i,
-          color,
-          35,
-          cv.LINE_8,
-          hierarchy,
-          100
-        );
+        cv.drawContours(dst, expandedContours, -1, color, 35, cv.LINE_8);
       }
 
       // log element with id "output_canvas"
@@ -246,8 +204,6 @@ export default function Editor(props) {
       cv.imshow("output_canvas", dst);
       const newImg = new Image();
       const base64Img = outputCanvasRef.current.toDataURL("image/png");
-      sendToPotrace(base64Img);
-      //console.log(base64Img);
       newImg.src = base64Img;
 
       src.delete();
@@ -344,69 +300,69 @@ export default function Editor(props) {
       .then((res) => res.json())
       .then((data) => {
         console.log(data);
-        const splitPath = data.split('"');
+        // const splitPath = data.split('"');
         //console.log(splitPath[11]);
-        setSVGPath(splitPath[11]);
+        //setSVGPath(splitPath[11]);
         setTracedSVG(data);
       });
   }
 
-  function expandCutLine(size: string) {
-    //Set the ratio to expand the SVG by
-    //Currently only sets medium and large cutlines, small should default to original size
-    //but gets overwritten
-    const amountToIncrease = size === "medium" ? 0.15 : 0.3;
+  // function expandCutLine(size: string) {
+  //   //Set the ratio to expand the SVG by
+  //   //Currently only sets medium and large cutlines, small should default to original size
+  //   //but gets overwritten
+  //   const amountToIncrease = size === "medium" ? 0.15 : 0.3;
 
-    //Check to see if we have a path to perform the expansion
-    if (svgPath) {
-      //Split the path by white space
-      const splitPath = svgPath.split(" ");
-      //console.log(splitPath);
-      //Loop through each point in the path
-      for (let i = 0; i < splitPath.length; i++) {
-        //console.log(point);
-        //Set a flag to check if the current point has a comma at the end of the point,
-        // if so we'll remove it and tack it back on later
-        let hasComma = false;
-        //check if last char is a comma
-        if (splitPath[i][splitPath[i].length - 1] === ",") {
-          hasComma = true;
-          //Set the current point with the comma removed
-          splitPath[i] = splitPath[i].substring(0, splitPath[i].length - 1);
-        }
+  //   //Check to see if we have a path to perform the expansion
+  //   if (svgPath) {
+  //     //Split the path by white space
+  //     const splitPath = svgPath.split(" ");
+  //     //console.log(splitPath);
+  //     //Loop through each point in the path
+  //     for (let i = 0; i < splitPath.length; i++) {
+  //       //console.log(point);
+  //       //Set a flag to check if the current point has a comma at the end of the point,
+  //       // if so we'll remove it and tack it back on later
+  //       let hasComma = false;
+  //       //check if last char is a comma
+  //       if (splitPath[i][splitPath[i].length - 1] === ",") {
+  //         hasComma = true;
+  //         //Set the current point with the comma removed
+  //         splitPath[i] = splitPath[i].substring(0, splitPath[i].length - 1);
+  //       }
 
-        //Point is currently a string, cast the string to a number
-        //We want a number because we want to only expand on the numbers
-        //and not the C, L, etc of a SVG path element
-        let convertedPoint = Number(splitPath[i]);
+  //       //Point is currently a string, cast the string to a number
+  //       //We want a number because we want to only expand on the numbers
+  //       //and not the C, L, etc of a SVG path element
+  //       let convertedPoint = Number(splitPath[i]);
 
-        //Check to see if current point is a number if not ignore
-        if (!isNaN(convertedPoint)) {
-          //Check to see if the point is supposed to have a comma
-          //Increase the current point by a factor and if there was supposed to be a comma,
-          //tack it on, otherwise leave it
-          splitPath[i] = hasComma
-            ? String(
-                (convertedPoint + amountToIncrease * convertedPoint).toFixed(3)
-              ) + ","
-            : String(
-                (convertedPoint + amountToIncrease * convertedPoint).toFixed(3)
-              );
-        }
-      }
-      // console.log(splitPath);
-      //Join the expanded path array back into an actual path
-      const expandedPath = splitPath.join(" ");
-      //Take the entire SVG string and replace the old path with the new path
-      const newSVG = tracedSVG.replace(
-        /<path d="([^"]+)"/,
-        `<path d="${expandedPath}"`
-      );
+  //       //Check to see if current point is a number if not ignore
+  //       if (!isNaN(convertedPoint)) {
+  //         //Check to see if the point is supposed to have a comma
+  //         //Increase the current point by a factor and if there was supposed to be a comma,
+  //         //tack it on, otherwise leave it
+  //         splitPath[i] = hasComma
+  //           ? String(
+  //               (convertedPoint + amountToIncrease * convertedPoint).toFixed(3)
+  //             ) + ","
+  //           : String(
+  //               (convertedPoint + amountToIncrease * convertedPoint).toFixed(3)
+  //             );
+  //       }
+  //     }
+  //     // console.log(splitPath);
+  //     //Join the expanded path array back into an actual path
+  //     const expandedPath = splitPath.join(" ");
+  //     //Take the entire SVG string and replace the old path with the new path
+  //     const newSVG = tracedSVG.replace(
+  //       /<path d="([^"]+)"/,
+  //       `<path d="${expandedPath}"`
+  //     );
 
-      //set state to new path
-      setTracedSVG(newSVG);
-    }
-  }
+  //     //set state to new path
+  //     setTracedSVG(newSVG);
+  //   }
+  // }
 
   const icons: React.ReactNode[] = Object.keys(toolComponents).map(
     (el: string) => {
@@ -428,7 +384,7 @@ export default function Editor(props) {
       <Component
         bgColor={bgColor}
         setBgColor={setBgColor}
-        expandCutLine={expandCutLine}
+        // expandCutLine={expandCutLine}
       />
     );
   };
